@@ -21,7 +21,7 @@ void Student::setRoom(int number) {
 void Student::setName(std::wstring name) {
 	this->name = name;
 }
-int Student::getType() {
+const int Student::getType() const {
 	return this->type;
 }
 Student* Student::copy() {
@@ -77,7 +77,12 @@ bool Comp::operator()(Student* s, double i) { return s->getType() < i; }
 bool Comp::operator()(double i, Student* s) { return i < s->getType(); }
 
 bool CompSet::operator() (Student* a, Student* b) const {
-	return a->getRoom() < b->getRoom();
+	if (a->getType() == b->getType()) {
+		return a->getRoom() < b->getRoom();
+	}
+	else {
+		return a->getType() < b->getType();
+	}
 }
 
 DB::DB() {
@@ -221,63 +226,20 @@ void CFunctional::getAllStudents(int& size, int* (&room), wchar_t** (&str), std:
 	std::locale::global(std::locale(""));
 	std::transform(filter.begin(), filter.end(), filter.begin(), towlower);
 	std::set<Student*, CompSet> all;
-	std::set_union(db->second->begin(), db->second->end(), db->third->begin(), db->third->end(), std::inserter(all, all.begin()));
-	std::set_union(db->eight->begin(), db->eight->end(), all.begin(), all.end(), std::inserter(all, all.begin()));
-	auto range = std::equal_range(all.begin(), all.end(), number, Comp{});
+	std::set_union(db->second->begin(), db->second->end(), db->third->begin(), db->third->end(), std::inserter(all, all.begin()), CompSet());
+	std::set_union(db->eight->begin(), db->eight->end(), all.begin(), all.end(), std::inserter(all, all.begin()), CompSet());
+	std::pair<std::_Tree_const_iterator<std::_Tree_val<std::_Tree_simple_types<Student*>>>, std::_Tree_const_iterator<std::_Tree_val<std::_Tree_simple_types<Student*>>>> range;
 	if (number > 0) {
-		//auto range = std::equal_range(all.begin(), all.end(), number, Comp{})
-	}
-	else {
-		//auto range = std::equal_range(all.begin(), all.end(), number, Comp{})
+		range = std::equal_range(all.begin(), all.end(), number, Comp{});
+	} else {
+		range.first = all.begin();
+		range.second = all.end();
 	}
 	size = db->second->size() + db->third->size() + db->eight->size();
 	room = new int[size];
 	str = new wchar_t* [size];
 	int j = 0;
-	for (auto i = range.first; i != range.second; ++i) {
-		std::wstring tempname = (*i)->getName();
-		std::wstring temproom = std::to_wstring((*i)->getRoom());
-		transform(tempname.begin(), tempname.end(), tempname.begin(), towlower);
-		if (filter == L"" || tempname.find(filter) != std::wstring::npos || temproom.find(filter) != std::wstring::npos) {
-			room[j] = (*i)->getRoom();
-			str[j] = new wchar_t[1024];
-			wcscpy_s(str[j], 1024, (*i)->getName().c_str());
-			j++;
-		}
-	}
-	/*for (std::set<Student*, CompSet>::const_iterator i = db->third->begin(); i != db->third->end(); ++i) {
-		std::wstring tempname = (*i)->getName();
-		std::wstring temproom = std::to_wstring((*i)->getRoom());
-		transform(tempname.begin(), tempname.end(), tempname.begin(), towlower);
-		if (filter == L"" || tempname.find(filter) != std::wstring::npos || temproom.find(filter) != std::wstring::npos) {
-			room[j] = (*i)->getRoom();
-			str[j] = new wchar_t[1024];
-			wcscpy_s(str[j], 1024, (*i)->getName().c_str());
-			j++;
-		}
-	}
-	for (std::set<Student*, CompSet>::const_iterator i = db->eight->begin(); i != db->eight->end(); ++i) {
-		std::wstring tempname = (*i)->getName();
-		std::wstring temproom = std::to_wstring((*i)->getRoom());
-		transform(tempname.begin(), tempname.end(), tempname.begin(), towlower);
-		if (filter == L"" || tempname.find(filter) != std::wstring::npos || temproom.find(filter) != std::wstring::npos) {
-			room[j] = (*i)->getRoom();
-			str[j] = new wchar_t[1024];
-			wcscpy_s(str[j], 1024, (*i)->getName().c_str());
-			j++;
-		}
-	}*/
-	size = j;
-}
-
-void CFunctional::getStudentsFromSecond(int& size, int* (&room), wchar_t** (&str), std::wstring filter) {
-	std::locale::global(std::locale(""));
-	std::transform(filter.begin(), filter.end(), filter.begin(), towlower);
-	size = db->second->size();
-	room = new int[size];
-	str = new wchar_t* [size];
-	int j = 0;
-	for (std::set<Student*, CompSet>::const_iterator i = db->second->begin(); i != db->second->end(); ++i) {
+	for (std::_Tree_const_iterator<std::_Tree_val<std::_Tree_simple_types<Student*>>> i = range.first; i != range.second; ++i) {
 		std::wstring tempname = (*i)->getName();
 		std::wstring temproom = std::to_wstring((*i)->getRoom());
 		transform(tempname.begin(), tempname.end(), tempname.begin(), towlower);
@@ -291,44 +253,72 @@ void CFunctional::getStudentsFromSecond(int& size, int* (&room), wchar_t** (&str
 	size = j;
 }
 
-void CFunctional::getStudentsFromThird(int& size, int* (&room), wchar_t** (&str), std::wstring filter) {
-	std::locale::global(std::locale(""));
-	std::transform(filter.begin(), filter.end(), filter.begin(), towlower);
-	size = db->third->size();
-	room = new int[size];
-	str = new wchar_t* [size];
-	int j = 0;
-	for (std::set<Student*, CompSet>::const_iterator i = db->third->begin(); i != db->third->end(); ++i) {
-		std::wstring tempname = (*i)->getName();
-		std::wstring temproom = std::to_wstring((*i)->getRoom());
-		transform(tempname.begin(), tempname.end(), tempname.begin(), towlower);
-		if (filter == L"" || tempname.find(filter) != std::wstring::npos || temproom.find(filter) != std::wstring::npos) {
-			room[j] = (*i)->getRoom();
-			str[j] = new wchar_t[1024];
-			wcscpy_s(str[j], 1024, (*i)->getName().c_str());
-			j++;
+void CFunctional::deleteStudent(int room, std::wstring name) {
+	std::set<Student*, CompSet> all;
+	std::set_union(db->second->begin(), db->second->end(), db->third->begin(), db->third->end(), std::inserter(all, all.begin()), CompSet());
+	std::set_union(db->eight->begin(), db->eight->end(), all.begin(), all.end(), std::inserter(all, all.begin()), CompSet());
+	int type = 0;
+	for (std::set<Student*, CompSet>::iterator i = all.begin(); i != all.end(); ++i) {
+		if ((*i)->getRoom() == room && (*i)->getName() == name) {
+			type = (*i)->getType();
+			break;
 		}
 	}
-	size = j;
+	if (type != 0) {
+		if (type == 1) {
+			for (std::set<Student*, CompSet>::iterator i = db->second->begin(); i != db->second->end(); ++i) {
+				if ((*i)->getRoom() == room && (*i)->getName() == name) {
+					delete *i;
+					db->second->erase(i);
+					break;
+				}
+			}
+		}
+		else if (type == 2) {
+			for (std::set<Student*, CompSet>::iterator i = db->third->begin(); i != db->third->end(); ++i) {
+				if ((*i)->getRoom() == room && (*i)->getName() == name) {
+					delete* i;
+					db->third->erase(i);
+					break;
+				}
+			}
+		}
+		else if (type == 3) {
+			for (std::set<Student*, CompSet>::iterator i = db->eight->begin(); i != db->eight->end(); ++i) {
+				if ((*i)->getRoom() == room && (*i)->getName() == name) {
+					delete* i;
+					db->eight->erase(i);
+					break;
+				}
+			}
+		}
+	}
 }
-
-void CFunctional::getStudentsFromEight(int& size, int* (&room), wchar_t** (&str), std::wstring filter) {
-	std::locale::global(std::locale(""));
-	std::transform(filter.begin(), filter.end(), filter.begin(), towlower);
-	size = db->eight->size();
-	room = new int[size];
-	str = new wchar_t* [size];
-	int j = 0;
-	for (std::set<Student*, CompSet>::const_iterator i = db->eight->begin(); i != db->eight->end(); ++i) {
-		std::wstring tempname = (*i)->getName();
-		std::wstring temproom = std::to_wstring((*i)->getRoom());
-		transform(tempname.begin(), tempname.end(), tempname.begin(), towlower);
-		if (filter == L"" || tempname.find(filter) != std::wstring::npos || temproom.find(filter) != std::wstring::npos) {
-			room[j] = (*i)->getRoom();
-			str[j] = new wchar_t[1024];
-			wcscpy_s(str[j], 1024, (*i)->getName().c_str());
-			j++;
+void CFunctional::editStudent(int room, std::wstring name, int newroom, std::wstring newname, int number) {
+	this->deleteStudent(room, name);
+	this->addStudent(newroom, newname, number);
+}
+void CFunctional::addStudent(int room, std::wstring name, int number) {
+	if (number == 1) {
+		db->second->insert(new StudentFromSecond(room, name));
+	}
+	else if (number == 2) {
+		db->third->insert(new StudentFromThird(room, name));
+	}
+	else if (number == 3) {
+		db->eight->insert(new StudentFromEight(room, name));
+	}
+}
+int CFunctional::getNumber(int room, std::wstring name) {
+	std::set<Student*, CompSet> all;
+	std::set_union(db->second->begin(), db->second->end(), db->third->begin(), db->third->end(), std::inserter(all, all.begin()), CompSet());
+	std::set_union(db->eight->begin(), db->eight->end(), all.begin(), all.end(), std::inserter(all, all.begin()), CompSet());
+	int type = 0;
+	for (std::set<Student*, CompSet>::iterator i = all.begin(); i != all.end(); ++i) {
+		if ((*i)->getRoom() == room && (*i)->getName() == name) {
+			type = (*i)->getType();
+			break;
 		}
 	}
-	size = j;
+	return type;
 }

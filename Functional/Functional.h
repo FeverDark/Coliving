@@ -37,7 +37,7 @@ public:
 	virtual std::wstring getName();
 	virtual void setRoom(int number);
 	virtual void setName(std::wstring name);
-	virtual int getType();
+	virtual const int getType() const;
 	virtual Student* copy();
 };
 
@@ -101,7 +101,8 @@ public:
 	~CFunctional();
 	DB* db;
 	void getAllStudents(int& size,int* (&room), wchar_t** (&str), std::wstring filter, int number);
-	void getStudentsFromSecond(int& size, int* (&room), wchar_t** (&str), std::wstring filter);
-	void getStudentsFromThird(int& size, int* (&room), wchar_t** (&str), std::wstring filter);
-	void getStudentsFromEight(int& size, int* (&room), wchar_t** (&str), std::wstring filter);
+	void deleteStudent(int room, std::wstring name);
+	void editStudent(int room, std::wstring name, int newroom, std::wstring newname, int number);
+	void addStudent(int room, std::wstring name, int number);
+	int getNumber(int room, std::wstring name);
 };
